@@ -13,13 +13,14 @@ pipeline {
     }
 
     stages {
-        stage('Clone') {
+
+        stage('Clone Repository') {
             steps {
                 git branch: 'main', url: 'https://github.com/kautsarakasyah/challange-lastday.git'
             }
         }
 
-        stage('Unit Test') {
+        stage('Run Unit Tests') {
             steps {
                 sh '''
                     chmod +x ./mvnw
@@ -30,19 +31,21 @@ pipeline {
 
         stage('SonarQube Analysis') {
             environment {
-                SONARQUBE_SCANNER_HOME = tool 'SonarQubeScanner' // <- diperbaiki
+                SONARQUBE_SCANNER_HOME = tool 'SonarQubeScanner'
             }
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
                         chmod +x ./mvnw
-                        ./mvnw sonar:sonar
+                        ./mvnw sonar:sonar \
+                            -Dsonar.projectKey=spring-boot-rest-controller-unit-test \
+                            -Dsonar.projectName="Spring Boot REST Controller"
                     '''
                 }
             }
         }
 
-        stage('Build Docker') {
+        stage('Build & Push Docker Image') {
             steps {
                 script {
                     docker.withRegistry('', "${DOCKER_CREDENTIALS}") {
@@ -53,7 +56,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to Cloud Run') {
+        stage('Deploy to Google Cloud Run') {
             steps {
                 sh '''
                     echo "${GCP_SA_KEY}" > key.json
@@ -68,14 +71,26 @@ pipeline {
             }
         }
 
-        stage('Send Notification to Telegram') {
+        stage('Send Telegram Notification') {
             steps {
                 sh '''
                     curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
                     -d chat_id=${TELEGRAM_CHAT_ID} \
-                    -d text="✅ Deployment to Cloud Run Success!"
+                    -d text="✅ Deployment to *Cloud Run* berhasil! \\nService: challange-service \\nImage: ${IMAGE_NAME}" \
+                    -d parse_mode=Markdown
                 '''
             }
+        }
+    }
+
+    post {
+        failure {
+            sh '''
+                curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
+                -d chat_id=${TELEGRAM_CHAT_ID} \
+                -d text="❌ *Deployment Failed!* \\nPlease check Jenkins for logs." \
+                -d parse_mode=Markdown
+            '''
         }
     }
 }
