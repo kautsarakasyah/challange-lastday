@@ -69,18 +69,19 @@ pipeline {
     }
   }
 
-post {
-  failure {
-    node {
-      script {
-        def msg = "❌ *Deploy Gagal*\nProject: `${env.IMAGE_NAME}`"
-        sh """
-          curl -s -X POST https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage \\
-            -d chat_id=${env.TELEGRAM_CHAT_ID} \\
-            -d parse_mode=Markdown \\
-            -d text="${msg}"
-        """
+  post {
+    failure {
+      node {
+        script {
+          def msg = "❌ *Deploy Gagal*\nProject: `${env.IMAGE_NAME}`"
+          sh """
+            curl -s -X POST https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage \\
+              -d chat_id=${env.TELEGRAM_CHAT_ID} \\
+              -d parse_mode=Markdown \\
+              -d text="${msg}"
+          """
+        }
       }
     }
   }
-}
+}  // <- ⬅️ Ini yang tadi hilang
