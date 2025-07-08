@@ -5,23 +5,23 @@ pipeline {
     IMAGE_NAME        = 'kautsarakasyah/challange-lastday'
     PROJECT_ID        = 'rakamin-ttc-odp-it-2'
     REGION            = 'asia-southeast2'
-    DOCKER_USER       = credentials('DOCKERHUB_USERNAME')
-    DOCKER_PASS       = credentials('DOCKERHUB_PASSWORD')
-    GCP_SA_KEY        = credentials('GCP_SA_KEY')  // JSON file sebagai Secret Text
-    TELEGRAM_TOKEN    = credentials('TELEGRAM_TOKEN')
-    TELEGRAM_CHAT_ID  = credentials('TELEGRAM_CHAT_ID')
+    DOCKER_USER       = credentials('kautsarakasyah')
+    DOCKER_PASS       = credentials('Dewi1102@')
+    GCP_SA_KEY        = credentials('challange')
+    TELEGRAM_TOKEN    = credentials('7964045222:AAElE5m35X1rUfU-2lO0ZpLzwuy_esmMsvY')
+    TELEGRAM_CHAT_ID  = credentials('1868802578')
   }
 
   stages {
-    stage('Checkout') {
+    stage('Clone') {
       steps {
         git branch: 'main', url: 'https://github.com/kautsarakasyah/challange-lastday.git'
       }
     }
 
-    stage('Build & Unit Test') {
+    stage('Unit Test') {
       steps {
-        sh './mvnw clean test'
+        sh 'chmod +x mvnw && ./mvnw clean test'
       }
     }
 
@@ -31,7 +31,7 @@ pipeline {
       }
     }
 
-    stage('Push Docker Image') {
+    stage('Push Docker to DockerHub') {
       steps {
         sh '''
           echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
