@@ -14,7 +14,7 @@ pipeline {
 
     // Telegram Bot Token dan Chat ID (secret text)
     TELEGRAM_TOKEN    = credentials('telegram-token')
-    TELEGRAM_CHAT_ID  = credentials('1868802578')
+    TELEGRAM_CHAT_ID  = credentials('telegram-chat-id')
   }
 
   stages {
