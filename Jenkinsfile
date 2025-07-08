@@ -5,9 +5,14 @@ pipeline {
     IMAGE_NAME        = 'kautsarakasyah/challange-lastday'
     PROJECT_ID        = 'rakamin-ttc-odp-it-2'
     REGION            = 'asia-southeast2'
-    DOCKER_USER       = credentials('kautsarakasyah')
-    DOCKER_PASS       = credentials('Dewi1102@')
+
+    // DockerHub credentials (Username with password)
+    DOCKER_CREDENTIALS = credentials('dockerhub-credentials')
+
+    // GCP Service Account JSON file
     GCP_SA_KEY        = credentials('challange')
+
+    // Telegram Bot Token dan Chat ID (secret text)
     TELEGRAM_TOKEN    = credentials('7964045222:AAElE5m35X1rUfU-2lO0ZpLzwuy_esmMsvY')
     TELEGRAM_CHAT_ID  = credentials('1868802578')
   }
@@ -34,7 +39,7 @@ pipeline {
     stage('Push Docker to DockerHub') {
       steps {
         sh '''
-          echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+          echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin
           docker push $IMAGE_NAME:latest
         '''
       }
@@ -43,7 +48,7 @@ pipeline {
     stage('Deploy ke Cloud Run (via Terraform)') {
       steps {
         sh '''
-          mkdir -p ~/.gcp && echo "$GCP_SA_KEY" > ~/.gcp/key.json
+          mkdir -p ~/.gcp && cp "$GCP_SA_KEY" ~/.gcp/key.json
           gcloud auth activate-service-account --key-file ~/.gcp/key.json
           gcloud config set project $PROJECT_ID
           gcloud config set run/region $REGION
@@ -62,8 +67,8 @@ pipeline {
         script {
           def msg = "✅ *Deploy Berhasil*\nProject: `$IMAGE_NAME`\nCloud Run Region: *$REGION*"
           sh """
-            curl -s -X POST https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage \\
-              -d chat_id=$TELEGRAM_CHAT_ID \\
+            curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \\
+              -d chat_id=${TELEGRAM_CHAT_ID} \\
               -d parse_mode=Markdown \\
               -d text="${msg}"
           """
@@ -79,8 +84,8 @@ pipeline {
         script {
           def msg = "❌ *Deploy Gagal*\nProject: `$IMAGE_NAME`"
           sh """
-            curl -s -X POST https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage \\
-              -d chat_id=$TELEGRAM_CHAT_ID \\
+            curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \\
+              -d chat_id=${TELEGRAM_CHAT_ID} \\
               -d parse_mode=Markdown \\
               -d text="${msg}"
           """
