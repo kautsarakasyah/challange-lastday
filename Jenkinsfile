@@ -16,13 +16,15 @@ pipeline {
         stage('Clone') {
             steps {
                 git branch: 'main', url: 'https://github.com/kautsarakasyah/challange-lastday.git'
-    }
-}
-
+            }
+        }
 
         stage('Unit Test') {
             steps {
-                sh './mvnw test'
+                sh '''
+                    chmod +x ./mvnw
+                    ./mvnw test
+                '''
             }
         }
 
@@ -32,7 +34,10 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh './mvnw sonar:sonar'
+                    sh '''
+                        chmod +x ./mvnw
+                        ./mvnw sonar:sonar
+                    '''
                 }
             }
         }
@@ -51,10 +56,14 @@ pipeline {
         stage('Deploy to Cloud Run') {
             steps {
                 sh '''
-                    gcloud auth activate-service-account --key-file=${GCP_SA_KEY}
+                    echo "${GCP_SA_KEY}" > key.json
+                    gcloud auth activate-service-account --key-file=key.json
                     gcloud config set project ${PROJECT_ID}
                     gcloud config set run/region ${REGION}
-                    gcloud run deploy challange-service --image=gcr.io/${PROJECT_ID}/challange-lastday --platform=managed --allow-unauthenticated
+                    gcloud run deploy challange-service \
+                        --image=docker.io/${IMAGE_NAME} \
+                        --platform=managed \
+                        --allow-unauthenticated
                 '''
             }
         }
