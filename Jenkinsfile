@@ -54,7 +54,10 @@ pipeline {
       }
     }
 
-    stage('Notifikasi Telegram') {
+    stage('Notifikasi Sukses ke Telegram') {
+      when {
+        expression { currentBuild.currentResult == 'SUCCESS' }
+      }
       steps {
         script {
           def msg = "✅ *Deploy Berhasil*\nProject: `$IMAGE_NAME`\nCloud Run Region: *$REGION*"
@@ -67,18 +70,21 @@ pipeline {
         }
       }
     }
-  }
 
-  post {
-    failure {
-      script {
-        def msg = "❌ *Deploy Gagal*\nProject: `${env.IMAGE_NAME}`"
-        sh """
-          curl -s -X POST https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/sendMessage \\
-            -d chat_id=${env.TELEGRAM_CHAT_ID} \\
-            -d parse_mode=Markdown \\
-            -d text="${msg}"
-        """
+    stage('Notifikasi Gagal ke Telegram') {
+      when {
+        expression { currentBuild.currentResult == 'FAILURE' }
+      }
+      steps {
+        script {
+          def msg = "❌ *Deploy Gagal*\nProject: `$IMAGE_NAME`"
+          sh """
+            curl -s -X POST https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage \\
+              -d chat_id=$TELEGRAM_CHAT_ID \\
+              -d parse_mode=Markdown \\
+              -d text="${msg}"
+          """
+        }
       }
     }
   }
