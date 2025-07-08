@@ -1,11 +1,21 @@
-# Base image dengan JDK 17 (cocok untuk Spring Boot 2.7+ atau 3.x)
+# === Stage 1: Build ===
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+
+WORKDIR /build
+
+# Salin semua file Maven
+COPY pom.xml .
+COPY src ./src
+
+# Build project
+RUN mvn clean package -DskipTests
+
+# === Stage 2: Run ===
 FROM eclipse-temurin:17-jdk
 
-# Buat workdir di dalam container
 WORKDIR /app
 
-# Salin hasil build Maven ke dalam image
-COPY target/*.jar app.jar
+# Ambil jar dari stage build
+COPY --from=build /build/target/*.jar app.jar
 
-# Jalankan aplikasi
 ENTRYPOINT ["java", "-jar", "app.jar"]
