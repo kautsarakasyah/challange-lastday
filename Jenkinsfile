@@ -15,9 +15,10 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                git 'https://github.com/kautsarakasyah/challange-lastday.git'
-            }
-        }
+                git branch: 'main', url: 'https://github.com/kautsarakasyah/challange-lastday.git'
+    }
+}
+
 
         stage('Unit Test') {
             steps {
