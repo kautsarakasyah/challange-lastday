@@ -5,11 +5,11 @@ pipeline {
     IMAGE_NAME        = 'kautsarakasyah/challange-lastday'
     PROJECT_ID        = 'rakamin-ttc-odp-it-2'
     REGION            = 'asia-southeast2'
-    DOCKER_USER       = credentials('kautsarakasyah')
-    DOCKER_PASS       = credentials('Dewi1102@')
-    GCP_SA_KEY        = credentials('challange')
-    TELEGRAM_TOKEN    = credentials('7964045222:AAElE5m35X1rUfU-2lO0ZpLzwuy_esmMsvY')
-    TELEGRAM_CHAT_ID  = credentials('1868802578')
+    DOCKER_USER       = credentials('kautsarakasyah')         // Ganti dengan ID credentials di Jenkins
+    DOCKER_PASS       = credentials('Dewi1102@')         // Ganti dengan ID credentials di Jenkins
+    GCP_SA_KEY        = credentials('challange')                // Ganti dengan ID credentials file JSON
+    TELEGRAM_TOKEN    = credentials('7964045222:AAElE5m35X1rUfU-2lO0ZpLzwuy_esmMsvY')         // Ganti dengan ID credentials di Jenkins
+    TELEGRAM_CHAT_ID  = credentials('1868802578')           // Ganti dengan ID credentials di Jenkins
   }
 
   stages {
@@ -34,7 +34,7 @@ pipeline {
     stage('Push Docker to DockerHub') {
       steps {
         sh '''
-          echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+          echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
           docker push $IMAGE_NAME:latest
         '''
       }
@@ -43,10 +43,11 @@ pipeline {
     stage('Deploy ke Cloud Run (via Terraform)') {
       steps {
         sh '''
-          mkdir -p ~/.gcp && echo "$GCP_SA_KEY" > ~/.gcp/key.json
+          mkdir -p ~/.gcp
+          echo "$GCP_SA_KEY" > ~/.gcp/key.json
           gcloud auth activate-service-account --key-file ~/.gcp/key.json
-          gcloud config set project $PROJECT_ID
-          gcloud config set run/region $REGION
+          gcloud config set project "$PROJECT_ID"
+          gcloud config set run/region "$REGION"
           cd terraform
           terraform init
           terraform apply -auto-approve
