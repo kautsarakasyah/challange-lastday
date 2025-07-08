@@ -10,17 +10,17 @@ pipeline {
         GCP_SA_KEY         = credentials('challange')
         TELEGRAM_TOKEN     = credentials('telegram-token')
         TELEGRAM_CHAT_ID   = credentials('telegram-chat-id')
+        SONAR_TOKEN        = credentials('sonarqube-token') // <-- Ditambahkan di Jenkins > Credentials
     }
 
     stages {
-
-        stage('Clone Repository') {
+        stage('Clone') {
             steps {
                 git branch: 'main', url: 'https://github.com/kautsarakasyah/challange-lastday.git'
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Unit Test') {
             steps {
                 sh '''
                     chmod +x ./mvnw
@@ -38,8 +38,9 @@ pipeline {
                     sh '''
                         chmod +x ./mvnw
                         ./mvnw sonar:sonar \
-                            -Dsonar.projectKey=spring-boot-rest-controller-unit-test \
-                            -Dsonar.projectName="Spring Boot REST Controller"
+                          -Dsonar.projectKey=spring-boot-rest-controller-unit-test \
+                          -Dsonar.projectName="Spring Boot REST Controller" \
+                          -Dsonar.login=${SONAR_TOKEN}
                     '''
                 }
             }
@@ -76,8 +77,7 @@ pipeline {
                 sh '''
                     curl -s -X POST https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage \
                     -d chat_id=${TELEGRAM_CHAT_ID} \
-                    -d text="✅ Deployment to *Cloud Run* berhasil! \\nService: challange-service \\nImage: ${IMAGE_NAME}" \
-                    -d parse_mode=Markdown
+                    -d text="✅ Deployment to Google Cloud Run Success!"
                 '''
             }
         }
