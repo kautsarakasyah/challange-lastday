@@ -13,7 +13,7 @@ pipeline {
     GCP_SA_KEY        = credentials('challange')
 
     // Telegram Bot Token dan Chat ID (secret text)
-    TELEGRAM_TOKEN    = credentials('7964045222:AAElE5m35X1rUfU-2lO0ZpLzwuy_esmMsvY')
+    TELEGRAM_TOKEN    = credentials('telegram-token')
     TELEGRAM_CHAT_ID  = credentials('1868802578')
   }
 
