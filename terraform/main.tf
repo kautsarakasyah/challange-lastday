@@ -1,33 +1,33 @@
+variable "project_id" {}
+variable "region" {}
+variable "image_url" {}
+
 provider "google" {
-  credentials = file("~/.gcp/key.json")
-  project     = "rakamin-ttc-odp-it-2"
-  region      = "asia-southeast2"
+  project = var.project_id
+  region  = var.region
 }
 
 resource "google_cloud_run_service" "default" {
-  name     = "challange-lastday"
-  location = "asia-southeast2"
+  name     = "challange-service"
+  location = var.region
 
   template {
     spec {
       containers {
-        image = "docker.io/kautsarakasyah/challange-lastday:latest"
-        ports {
-          container_port = 8080
-        }
+        image = var.image_url
       }
     }
   }
 
-  traffics {
+  traffic {
     percent         = 100
     latest_revision = true
   }
 }
 
-resource "google_cloud_run_service_iam_member" "invoker" {
-  location        = google_cloud_run_service.default.location
-  service         = google_cloud_run_service.default.name
-  role            = "roles/run.invoker"
-  member          = "allUsers"
+resource "google_cloud_run_service_iam_member" "noauth" {
+  service  = google_cloud_run_service.default.name
+  location = google_cloud_run_service.default.location
+  role     = "roles/run.invoker"
+  member   = "allUsers"
 }
